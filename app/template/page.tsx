@@ -141,7 +141,6 @@ const Template = () => {
         ref={boxRef}
         style={{
           width: `${range[1]}%`,
-          height: '70vh',
           color: "#000",
           padding: 100,
           display: "flex",
