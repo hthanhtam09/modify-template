@@ -11,8 +11,13 @@ const Template = () => {
   const [color, setColor] = useState("#fff");
   const [range, setRange] = useState([0, 100]);
   const [selectedElement, setSelectedElement] = useState<any>(null);
+  const [value, setValue] = useState("");
+  const [text, setText] = useState("");
+  const [elementTypes, setElementTypes] = useState<any>([]);
+  const [isOpenInput, setIsOpenInput] = useState(false);
+
+  const textInputRef = useRef<HTMLInputElement>(null);
   const boxRef = useRef<HTMLHeadingElement>(null);
-  const [elementType, setElementType] = useState("h1");
 
   const handleElementClick = (element) => {
     setSelectedElement(element);
@@ -34,19 +39,46 @@ const Template = () => {
 
   const handleMouseMove = (e) => {
     if (selectedElement && e.target === selectedElement) {
-      setElementType("h2"); // Thay đổi thẻ thành "h2" (hoặc thẻ khác bạn muốn)
+      // setElementType("h2");
     }
   };
 
-  const renderElement = (ElementTag) => (
-    <ElementTag
-      onClick={(e) => handleElementClick(e.target)}
-      onMouseMove={handleMouseMove}
-      style={{ color }}
-    >
-      Click me to change my type!
-    </ElementTag>
-  );
+  const renderElement = (ElementTag, text) => {
+    return (
+      <ElementTag
+        onClick={(e) => handleElementClick(e.target)}
+        onMouseMove={handleMouseMove}
+        style={{ color: "#000", cursor: "pointer", width: "100%", wordWrap: "break-word",  }}
+      >
+        {text}
+      </ElementTag>
+    );
+  };
+
+  const handleAddMore = () => {
+    setIsOpenInput((prev) => !prev);
+  };
+
+  const handleKeyDownTag = (e) => {
+    if (e.key === "Enter") {
+      textInputRef.current?.focus();
+    }
+  };
+
+  const values: any = [];
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      values.push({
+        tag: value,
+        text,
+      });
+      setElementTypes((prev) => [...prev, ...values]);
+      setIsOpenInput(false);
+      setValue("");
+      setText("");
+    }
+  };
 
   return (
     <div
@@ -109,42 +141,74 @@ const Template = () => {
         ref={boxRef}
         style={{
           width: `${range[1]}%`,
+          height: '70vh',
           color: "#000",
           padding: 100,
           display: "flex",
           justifyContent: "space-between",
           flexDirection: "column",
+          background: '#c4ed8a',
         }}
       >
-        <h1
+        <button
           style={{
-            cursor: "pointer",
+            background: "#fff",
+            border: "1px solid #000",
+            maxWidth: "200px",
+            height: "50px",
+            borderRadius: "5px",
+            color: "#000",
           }}
-          onClick={(e) => handleElementClick(e.target)}
-          onMouseMove={(e) => console.log(e.target)}
+          onClick={handleAddMore}
         >
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit. Voluptates
-          quaerat possimus beatae ex libero, harum officia in sequi culpa
-          expedita, aspernatur nesciunt fugiat. Voluptatem unde consectetur
-          reiciendis itaque, ex repudiandae.
-        </h1>
-        <h2
-          style={{
-            cursor: "pointer",
-          }}
-          onClick={(e) => handleElementClick(e.target)}
-        >
-          Hello
-        </h2>
-        <h3
-          style={{
-            cursor: "pointer",
-          }}
-          onClick={(e) => handleElementClick(e.target)}
-        >
-          Hehe
-        </h3>
-        {renderElement(elementType)}
+          Add more elements
+        </button>
+        {isOpenInput && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-start",
+              alignItems: "center",
+              marginTop: "20px",
+              gap: 20,
+            }}
+          >
+            <input
+              type="text"
+              value={value}
+              placeholder="Type tag you want to add"
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={handleKeyDownTag}
+              style={{
+                width: "40%",
+                height: 50,
+                padding: 10,
+                borderRadius: "5px",
+                background: "#fff",
+                color: "#000",
+              }}
+            />
+            <input
+              type="text"
+              value={text}
+              placeholder="Type text you want to add"
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              ref={textInputRef}
+              style={{
+                width: "40%",
+                height: 50,
+                padding: 10,
+                borderRadius: "5px",
+                background: "#fff",
+                color: "#000",
+              }}
+            />
+          </div>
+        )}
+        {elementTypes.length
+          ? elementTypes.map(({ tag, text }) => renderElement(tag, text))
+          : null}
       </div>
     </div>
   );

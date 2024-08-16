@@ -5,7 +5,7 @@ export default function Home() {
  
   return (
     <main className={styles.main}>
-      <h1>Please choose template to start</h1>
+      <h1 style={{ color: '#000' }}>Please choose template to start</h1>
 
       <Link style={{
         width: '200px',
@@ -13,7 +13,7 @@ export default function Home() {
         backgroundColor: 'gray',
         marginTop: '50px',
       }} href={'/template'}>
-        <h2>Template</h2>
+        <h2 style={{ color: '#000', textAlign: 'center' }} >Template default</h2>
       </Link>
     </main>
   );
