@@ -1,6 +1,6 @@
 "use client";
 
-import { TITLE } from "@/utils/enum";
+import { TITLE, TITLE_COLOR } from "@/utils/enum";
 import React, { useState } from "react";
 import { HexColorPicker } from "react-colorful";
 import RangeSlider from "react-range-slider-input";
@@ -42,29 +42,38 @@ const Sidebar = (props) => {
         {title !== TITLE.IMAGE && (
           <>
             <p>
-              {titleColor}: {selectedElementIndex?.style?.color}
+              {titleColor}: {titleColor === TITLE_COLOR.BACKGROUND_COLOR ? styles.backgroundColor : selectedElementIndex?.style?.color}
             </p>
             <HexColorPicker
               style={{
                 width: 150,
                 height: 80,
               }}
-              color={selectedElementIndex?.style?.color}
+              color={titleColor === TITLE_COLOR.BACKGROUND_COLOR ? styles.backgroundColor : selectedElementIndex?.style?.color}
               onChange={(newColor) => {
-                setElements((prev) => {
-                  return prev.map((element) => {
-                    if (element.elementType.toUpperCase() === selectedElement) {
-                      return {
-                        ...element,
-                        style: {
-                          ...element.style,
-                          color: newColor,
-                        },
-                      };
-                    }
-                    return element;
+                if (titleColor === TITLE_COLOR.BACKGROUND_COLOR) {
+                  setStyles((prev) => {
+                    return {
+                      ...prev,
+                      backgroundColor: newColor,
+                    };
                   });
-                });
+                } else {
+                  setElements((prev) => {
+                    return prev.map((element) => {
+                      if (element.elementType.toUpperCase() === selectedElement) {
+                        return {
+                          ...element,
+                          style: {
+                            ...element.style,
+                            color: newColor,
+                          },
+                        };
+                      }
+                      return element;
+                    });
+                  });
+                }
               }}
             />
           </>
@@ -113,7 +122,7 @@ const Sidebar = (props) => {
               style={{
                 color: "#000",
                 display: "block",
-                paddingBottom: "10px",
+                padding: "10px 0",
               }}
             >
               Height: {selectedElementIndex?.style?.heightImg[1]}px

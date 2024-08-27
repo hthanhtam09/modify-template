@@ -15,6 +15,7 @@ const defaultStyles = {
   fontSize: [0, 16],
   fontWeight: "",
   textAlign: "",
+  backgroundColor: "",
 };
 
 const Template = () => {
@@ -27,13 +28,19 @@ const Template = () => {
   const [selectedElement, setSelectedElement] = useState(null);
   const [styles, setStyles] = useState<any>(defaultStyles);
   const boxRef = useRef<HTMLHeadingElement>(null);
-
   const [elements, setElements] = useState([
     {
       id: 1,
       tag: "div",
       elementType: "img",
-      content: <img src="https://via.placeholder.com/150" alt="Placeholder" width='100%' height='100%' />,
+      content: (
+        <img
+          src="https://via.placeholder.com/150"
+          alt="Placeholder"
+          width="100%"
+          height="100%"
+        />
+      ),
       style: defaultStyles,
     },
     {
@@ -64,8 +71,8 @@ const Template = () => {
 
   useEffect(() => {
     if (selectedElement) {
-      setElements(prevElements => {
-        return prevElements.map(el => {
+      setElements((prevElements) => {
+        return prevElements.map((el) => {
           if (el.elementType.toUpperCase() === selectedElement) {
             return {
               ...el,
@@ -78,32 +85,16 @@ const Template = () => {
     }
   }, [selectedElement, styles]);
 
-  const HoverableElement = ({
-    tag: Tag,
-    children,
-    elementType,
-    hoveredElement,
-    handleMouseEnter,
-    handleMouseLeave,
-    style,
-  }) => {
-
+  const HoverableElement = ({ tag: Tag, children, elementType, style }) => {
     return (
       <Tag
         style={{
-          background:
-            hoveredElement === elementType.toUpperCase()
-              ? "lightgray"
-              : "transparent",
-          cursor: "pointer",
           ...style,
           fontSize: style?.fontSize[1],
-          width: elementType === 'img' ? style?.widthImg[1] : '',
-          height: elementType === 'img' ? style?.heightImg[1] : '',
-          padding: '10px 0'
+          width: elementType === "img" ? style?.widthImg[1] : "",
+          height: elementType === "img" ? style?.heightImg[1] : "",
+          padding: "10px 0",
         }}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
       >
         {children}
       </Tag>
@@ -111,15 +102,15 @@ const Template = () => {
   };
 
   const handleVerifyElement = (element) => {
-    const tagName = element.tagName
+    const tagName = element.tagName;
     const content = element.innerHTML;
-  
+
     if (element === boxRef.current) {
       setTitle(TITLE.CONTAINER);
       setTitleColor(TITLE_COLOR.BACKGROUND_COLOR);
       return;
     }
-  
+
     setSelectedElement(tagName);
 
     if (tagName !== ETagType.img) {
@@ -128,14 +119,14 @@ const Template = () => {
           if (el.elementType.toUpperCase() === tagName) {
             return {
               ...el,
-              content: content
+              content: content,
             };
           }
           return el;
         });
       });
     }
-  
+
     switch (tagName) {
       case ETagType.img:
         setTitle(TITLE.IMAGE);
@@ -155,7 +146,6 @@ const Template = () => {
         break;
     }
   };
-  
 
   const handleMouseEnter = (element) => {
     setHoveredElement(element.target.tagName);
@@ -207,6 +197,7 @@ const Template = () => {
             justifyContent: "center",
             alignItems: "center",
             height: "95vh",
+            backgroundColor: styles.backgroundColor,
           }}
           onClick={(e) => handleVerifyElement(e.target)}
         >
@@ -217,23 +208,49 @@ const Template = () => {
               width: `${styles.width[1]}%`,
             }}
           >
-            {elements.map(
-              ({ id, tag, elementType, content, style }, index) => {
-                return (
+            {elements.map(({ id, tag, elementType, content, style }, index) => {
+              return (
+                <div
+                  key={`${id}-${tag}`}
+                  style={{
+                    position: "relative",
+                    display: "flex",
+                    background:
+                      hoveredElement === elementType.toUpperCase()
+                        ? "#fafafa"
+                        : "transparent",
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                >
                   <HoverableElement
-                    key={`${id}-${tag}`}
                     tag={tag}
                     elementType={elementType}
-                    hoveredElement={hoveredElement}
-                    handleMouseEnter={handleMouseEnter}
-                    handleMouseLeave={handleMouseLeave}
                     style={style}
                   >
                     {content}
                   </HoverableElement>
-                );
-              }
-            )}
+                  {/* TODO: Add dev nested */}
+                  {/* {hoveredElement === elementType.toUpperCase() && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        right: 0,
+                        cursor: 'pointer',
+                        border: "1px solid #000",
+                        borderRadius: "50%",
+                        padding: 10,
+                        zIndex: 10
+                      }}
+                      onClick={() => console.log('123')}
+                    >
+                      +
+                    </div>
+                  )} */}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
