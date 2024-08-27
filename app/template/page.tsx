@@ -1,83 +1,168 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { useRef, useState } from "react";
-import { saveAs } from "file-saver";
-import { HexColorPicker } from "react-colorful";
-import RangeSlider from "react-range-slider-input";
-import "react-range-slider-input/dist/style.css";
+import React, { useEffect, useRef, useState } from "react";
 import "../page.module.css";
+import Header from "@/components/Header";
+import Sidebar from "@/components/Sidebar";
+import { ETagType, TITLE, TITLE_COLOR } from "@/utils/enum";
+
+const defaultStyles = {
+  width: [0, 50],
+  widthImg: [0, 100],
+  heightImg: [0, 100],
+  color: "",
+  fontSize: [0, 16],
+  fontWeight: "",
+  textAlign: "",
+};
 
 const Template = () => {
-  const [color, setColor] = useState("#fff");
-  const [range, setRange] = useState([0, 100]);
-  const [selectedElement, setSelectedElement] = useState<any>(null);
-  const [value, setValue] = useState("");
-  const [text, setText] = useState("");
-  const [elementTypes, setElementTypes] = useState<any>([]);
-  const [isOpenInput, setIsOpenInput] = useState(false);
+  const [title, setTitle] = useState<TITLE>(TITLE.CONTAINER);
+  const [titleColor, setTitleColor] = useState<TITLE_COLOR>(
+    TITLE_COLOR.BACKGROUND_COLOR
+  );
 
-  const textInputRef = useRef<HTMLInputElement>(null);
+  const [hoveredElement, setHoveredElement] = useState(null);
+  const [selectedElement, setSelectedElement] = useState(null);
+  const [styles, setStyles] = useState<any>(defaultStyles);
   const boxRef = useRef<HTMLHeadingElement>(null);
 
-  const handleElementClick = (element) => {
-    setSelectedElement(element);
-  };
+  const [elements, setElements] = useState([
+    {
+      id: 1,
+      tag: "div",
+      elementType: "img",
+      content: <img src="https://via.placeholder.com/150" alt="Placeholder" width='100%' height='100%' />,
+      style: defaultStyles,
+    },
+    {
+      id: 2,
+      tag: "h1",
+      elementType: "h1",
+      content:
+        "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Sample 1",
+      style: defaultStyles,
+    },
+    {
+      id: 3,
+      tag: "p",
+      elementType: "p",
+      content:
+        "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Sample 2",
+      style: defaultStyles,
+    },
+    {
+      id: 4,
+      tag: "h3",
+      elementType: "h3",
+      content:
+        "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Sample 3",
+      style: defaultStyles,
+    },
+  ]);
 
-  const createHtmlFile = () => {
-    const htmlContent = `
-      <html>
-      <head><title>Example</title></head>
-      <body>
-        ${boxRef.current && boxRef.current.outerHTML}
-      </body>
-      </html>
-    `;
-
-    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
-    saveAs(blob, "example.html");
-  };
-
-  const handleMouseMove = (e) => {
-    if (selectedElement && e.target === selectedElement) {
-      // setElementType("h2");
+  useEffect(() => {
+    if (selectedElement) {
+      setElements(prevElements => {
+        return prevElements.map(el => {
+          if (el.elementType.toUpperCase() === selectedElement) {
+            return {
+              ...el,
+              style: { ...el.style },
+            };
+          }
+          return el;
+        });
+      });
     }
-  };
+  }, [selectedElement, styles]);
 
-  const renderElement = (ElementTag, text) => {
+  const HoverableElement = ({
+    tag: Tag,
+    children,
+    elementType,
+    hoveredElement,
+    handleMouseEnter,
+    handleMouseLeave,
+    style,
+  }) => {
+
     return (
-      <ElementTag
-        onClick={(e) => handleElementClick(e.target)}
-        onMouseMove={handleMouseMove}
-        style={{ color: "#000", cursor: "pointer", width: "100%", wordWrap: "break-word",  }}
+      <Tag
+        style={{
+          background:
+            hoveredElement === elementType.toUpperCase()
+              ? "lightgray"
+              : "transparent",
+          cursor: "pointer",
+          ...style,
+          fontSize: style?.fontSize[1],
+          width: elementType === 'img' ? style?.widthImg[1] : '',
+          height: elementType === 'img' ? style?.heightImg[1] : '',
+          padding: '10px 0'
+        }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
-        {text}
-      </ElementTag>
+        {children}
+      </Tag>
     );
   };
 
-  const handleAddMore = () => {
-    setIsOpenInput((prev) => !prev);
-  };
-
-  const handleKeyDownTag = (e) => {
-    if (e.key === "Enter") {
-      textInputRef.current?.focus();
+  const handleVerifyElement = (element) => {
+    const tagName = element.tagName
+    const content = element.innerHTML;
+  
+    if (element === boxRef.current) {
+      setTitle(TITLE.CONTAINER);
+      setTitleColor(TITLE_COLOR.BACKGROUND_COLOR);
+      return;
     }
-  };
+  
+    setSelectedElement(tagName);
 
-  const values: any = [];
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      values.push({
-        tag: value,
-        text,
+    if (tagName !== ETagType.img) {
+      setElements((prev) => {
+        return prev.map((el) => {
+          if (el.elementType.toUpperCase() === tagName) {
+            return {
+              ...el,
+              content: content
+            };
+          }
+          return el;
+        });
       });
-      setElementTypes((prev) => [...prev, ...values]);
-      setIsOpenInput(false);
-      setValue("");
-      setText("");
     }
+  
+    switch (tagName) {
+      case ETagType.img:
+        setTitle(TITLE.IMAGE);
+        break;
+      case ETagType.h1:
+        setTitle(TITLE.HEADER);
+        setTitleColor(TITLE_COLOR.COLOR);
+        break;
+      case ETagType.h2:
+      case ETagType.h3:
+      case ETagType.p:
+        setTitle(TITLE.CONTENT);
+        setTitleColor(TITLE_COLOR.COLOR);
+        break;
+      default:
+        console.log("Clicked on another element:", tagName);
+        break;
+    }
+  };
+  
+
+  const handleMouseEnter = (element) => {
+    setHoveredElement(element.target.tagName);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredElement(null);
   };
 
   return (
@@ -87,127 +172,70 @@ const Template = () => {
         height: "100vh",
       }}
     >
+      <Header boxRef={boxRef} />
       <div
         style={{
           display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          height: "30vh",
-          paddingTop: 20,
-          borderBottom: "1px solid #000",
+          width: "100%",
+          justifyContent: "space-between",
         }}
       >
-        <button onClick={createHtmlFile}>Export HTML</button>
-        <HexColorPicker
-          style={{
-            width: 200,
-            height: 100,
-            marginTop: "50px",
-          }}
-          color={color}
-          onChange={(newColor) => {
-            setColor(newColor);
-            if (selectedElement) {
-              selectedElement.style.color = newColor;
-            }
-          }}
-        />
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            width: "50%",
-            marginTop: "50px",
+            order: 1,
+            borderLeft: "1px solid #000",
+            flex: 1,
+            height: "95vh",
           }}
         >
-          <h2
-            style={{
-              color: "#000",
-              marginRight: "50px",
-              width: "250px",
-            }}
-          >
-            Width: {range[1]} %
-          </h2>
-          <RangeSlider
-            value={range}
-            onInput={setRange}
-            rangeSlideDisabled={true}
-            thumbsDisabled={[true, false]}
+          <Sidebar
+            setElements={setElements}
+            title={title}
+            titleColor={titleColor}
+            selectedElement={selectedElement}
+            elements={elements}
+            setStyles={setStyles}
+            styles={styles}
           />
         </div>
-      </div>
-      <div
-        ref={boxRef}
-        style={{
-          width: `${range[1]}%`,
-          color: "#000",
-          padding: 100,
-          display: "flex",
-          justifyContent: "space-between",
-          flexDirection: "column",
-          background: '#c4ed8a',
-        }}
-      >
-        <button
+        <div
+          ref={boxRef}
           style={{
-            background: "#fff",
-            border: "1px solid #000",
-            maxWidth: "200px",
-            height: "50px",
-            borderRadius: "5px",
-            color: "#000",
+            flex: 2,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "95vh",
           }}
-          onClick={handleAddMore}
+          onClick={(e) => handleVerifyElement(e.target)}
         >
-          Add more elements
-        </button>
-        {isOpenInput && (
           <div
             style={{
-              display: "flex",
-              justifyContent: "flex-start",
-              alignItems: "center",
-              marginTop: "20px",
-              gap: 20,
+              color: "#000",
+              gap: 10,
+              width: `${styles.width[1]}%`,
             }}
           >
-            <input
-              type="text"
-              value={value}
-              placeholder="Type tag you want to add"
-              onChange={(e) => setValue(e.target.value)}
-              onKeyDown={handleKeyDownTag}
-              style={{
-                width: "40%",
-                height: 50,
-                padding: 10,
-                borderRadius: "5px",
-                background: "#fff",
-                color: "#000",
-              }}
-            />
-            <input
-              type="text"
-              value={text}
-              placeholder="Type text you want to add"
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={handleKeyDown}
-              ref={textInputRef}
-              style={{
-                width: "40%",
-                height: 50,
-                padding: 10,
-                borderRadius: "5px",
-                background: "#fff",
-                color: "#000",
-              }}
-            />
+            {elements.map(
+              ({ id, tag, elementType, content, style }, index) => {
+                return (
+                  <HoverableElement
+                    key={`${id}-${tag}`}
+                    tag={tag}
+                    elementType={elementType}
+                    hoveredElement={hoveredElement}
+                    handleMouseEnter={handleMouseEnter}
+                    handleMouseLeave={handleMouseLeave}
+                    style={style}
+                  >
+                    {content}
+                  </HoverableElement>
+                );
+              }
+            )}
           </div>
-        )}
-        {elementTypes.length
-          ? elementTypes.map(({ tag, text }) => renderElement(tag, text))
-          : null}
+        </div>
       </div>
     </div>
   );
